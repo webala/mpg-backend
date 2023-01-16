@@ -4,7 +4,7 @@ from .models import Car, Part
 class CarSerializer (serializers.ModelSerializer):
     class Meta:
         model = Car
-        fields = ['id','make', 'series', 'model', 'year', 'body_type', 'engine']
+        fields = ['id', 'make', 'series', 'model', 'year', 'body_type', 'engine']
 
 
 class PartsSerializer(serializers.ModelSerializer):
@@ -19,7 +19,8 @@ class PartsSerializer(serializers.ModelSerializer):
         cars = validated_data.get('cars')
 
         for value in cars:
-            car = Car.objects.create(
+            print(value)
+            car = Car.objects.get(
                 make = value.get('make'),
                 series = value.get('series'),
                 model = value.get('model'),
@@ -31,4 +32,4 @@ class PartsSerializer(serializers.ModelSerializer):
             part.cars.add(car)
         
         return part
-        # print('cars: ', cars)
+        print('cars: ', cars)
