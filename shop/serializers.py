@@ -23,7 +23,7 @@ class PartsSerializer(serializers.ModelSerializer):
 
 
     def create(self, validated_data):
-        part = Part.objects.create(part_no=validated_data.get('part_no'), category=validated_data.get('category'))
+        part = Part.objects.create(part_no=validated_data.get('part_no'), category=validated_data.get('category'), inventory=validated_data.get('inventory'))
         cars = validated_data.get('cars')
      
         for value in cars:
