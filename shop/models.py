@@ -6,7 +6,7 @@ from django.db import models
 class Car(models.Model):
     make = models.CharField(max_length=20)
     series = models.CharField(max_length=20, null=True, blank=True)
-    model = models.CharField(max_length=20)
+    model = models.CharField(max_length=20, null=True, blank=True)
     year = models.CharField(max_length=10)
     body_type = models.CharField(max_length=20)
     engine = models.CharField(max_length=20)
