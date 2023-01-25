@@ -19,7 +19,7 @@ class PartsSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Part
-        fields = ['part_no', 'cars', 'category', 'image_url', 'image_filename', 'inventory']
+        fields = ['id', 'name', 'part_no', 'cars', 'category', 'image_url', 'image_filename', 'inventory']
 
 
     def create(self, validated_data):
