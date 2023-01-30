@@ -87,5 +87,5 @@ class MpesaTransaction(models.Model):
     order = models.ForeignKey(Order, on_delete=models.SET_NULL, null=True)
     is_complete = models.BooleanField(default=False)
     phone_number = models.CharField(max_length=15, null=True)
-    amount = models.DecimalField(max_digits=7, decimal_places=2)
+    amount = models.DecimalField(max_digits=7, decimal_places=2, null=True)
     receipt_number = models.CharField(max_length=15, null=True)

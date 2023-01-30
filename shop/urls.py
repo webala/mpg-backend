@@ -7,5 +7,6 @@ urlpatterns = [
     path('part/<pk>', PartDetail.as_view(), name='part'),
     path('parts/<str:category>', parts_by_category, name='parts-by-category'),
     path('orders/', OrdersView.as_view(), name='orders'),
-    path('order/<pk>', OrderDetail.as_view(), name='order')
+    path('order/<pk>', OrderDetail.as_view(), name='order'),
+    path('payment/mpesa', ProcessMpesaPayment.as_view(), name='mpesa-payment'),
 ]
