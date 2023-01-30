@@ -1,14 +1,12 @@
 from django.shortcuts import render
 from rest_framework import generics
-from .models import Car, Part
-from .serializers import CarSerializer, PartsSerializer, CreatePartSerializer
+from .models import Car, Part, Client, ShippingAddress, Order, OrderItem, MpesaTransaction
+from .serializers import CarSerializer, PartsSerializer, OrderSerializer, OrderDetailSerializer, MpesaPaymentSerializer
+from .utils import initiate_stk_push
 from rest_framework.parsers import MultiPartParser, FormParser
-from rest_framework.decorators import api_view, parser_classes
+from rest_framework.decorators import api_view
 from rest_framework.response import Response
-import json
-
-from .utils import upload_image
-# Create your views here.
+from rest_framework.views import APIView
 
 class Cars(generics.ListCreateAPIView):
     queryset = Car.objects.all()
@@ -24,51 +22,85 @@ class PartDetail(generics.RetrieveAPIView):
     model = Part
     serializer_class = PartsSerializer
     queryset = Part.objects.all()
-    
 
-# @api_view(['POST'])
-# @parser_classes([MultiPartParser, FormParser])
-# def create_part(request):
-#     print('request: ', request)
-#     serializer = CreatePartSerializer(data=request.data)
+class OrderDetail(generics.RetrieveAPIView):
+    model = Order
+    serializer_class = OrderDetailSerializer
+    queryset = Order.objects.all()
+    context_object_name = 'order'
 
-#     if serializer.is_valid(raise_exception=True):
-#         data = serializer.validated_data
-#         part = Part.objects.create(part_no=data.get('part_no'), category=data.get('category'))
-#         cars = data.get('cars')
-#         image = data.get('image')
-#         image_data = upload_image(image)
-#         part.image_url = image_data['image_url']
-#         part.image_filename = image_data['filename']
+    def get_serializer_context(self, **kwargs):
+        context = super(OrderDetail, self).get_serializer_context(**kwargs)
+        print('context: ', context)
+        order = super().get_object()
+        print('order: ', order)
+        order_items = order.orderitem_set.all()
+        print('order items: ', order_items)
+        context.update({'order_items': order_items})
+        return context
 
+class OrdersView(APIView):
+    def post(self, request):
+        serializer = OrderSerializer(data=request.data)
+        if serializer.is_valid(raise_exception=True):
+            data = serializer.validated_data
+            client_data = data.get('client')
+            shipping_address_data = data.get('shipping_address')
+            order_items_data = data.get('order_items')
 
-#         for value in cars:
-#             car = Car.objects.get(
-#                 make = value.get('make'),
-#                 series = value.get('series'),
-#                 model = value.get('model'),
-#                 year = value.get('year'),
-#                 body_type = value.get('body_type'),
-#                 engine = value.get('engine')
-#             )
-#             part.cars.add(car)
-#         part.save()
-#         serializer = PartsSerializer(part)
-#         return Response(serializer.data)
+            client = Client.objects.create(
+                first_name=client_data.get('first_name'),
+                last_name=client_data.get('last_name'),
+                phone_number=client_data.get('phone_number'),
+                email=client_data.get('email')
+            )
 
+            shipping_address = ShippingAddress.objects.create(
+                location=shipping_address_data.get('location'),
+                building=shipping_address_data.get('building'),
+                house_number=shipping_address_data.get('house_number'),
+                description=shipping_address_data.get('description'),
+                client=client
+            )
+
+            order = Order.objects.create(shipping_address=shipping_address)
+            for item in order_items_data:
+                part_id = item.get('part_id')
+                quantity = item.get('quantity')
+                part = Part.objects.get(id=part_id)
+                OrderItem.objects.create(
+                    part=part,
+                    order=order,
+                    quantity=quantity
+                )
+
+            return Response({"message": "success", "order_id": order.id}, status=201)
 
 @api_view(['GET'])
 def parts_by_category(request, category):
     queryset = Part.objects.filter(category=category)
-    print(queryset)
-    # if queryset.exists():
     serializer = PartsSerializer(queryset, many=True)
     return Response(serializer.data, status=200)
-    # return Response({'massage': 'category does not exist'}, status=404)
 
-@api_view(['GET'])
-def cart(request):
-    try:
-        cart_data = json.loads(request.COOKIES['cart'])
-    except:
-        cart_data = {}
+
+class ProcessMpesaPayment(APIView):
+    def post(self, request):
+        serializer = MpesaPaymentSerializer(data=request.data)
+        if serializer.is_valid(raise_exception=True):
+            phone_number = serializer.validated_data.get('phone_number')
+            order_id = serializer.validated_data.get('order_id')
+            order = Order.objects.get(id=order_id)
+            amount = order.cart_total
+            transaction_data = initiate_stk_push(phone_number)
+            if "errorCode" in transaction_data:
+                return Response({
+                    "errorCode": transaction_data['errorCode'],
+                    "errorMesssage": transaction_data['errorMessage']
+                }, status=405)
+            else:
+                transaction = MpesaTransaction.objects.create(
+                    request_id=transaction_data['chechout_request_id'],
+                    order=order
+                )
+
+                return Response({'message': 'success', 'transaction_id': transaction.id}, status=201)

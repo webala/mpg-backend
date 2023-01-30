@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Car, Part
+from .models import Car, Part, Client, ShippingAddress,OrderItem, Order
 from .utils import upload_image
 
 class CarSerializer (serializers.ModelSerializer):
@@ -38,3 +38,43 @@ class PartsSerializer(serializers.ModelSerializer):
             part.cars.add(car)
         
         return part
+
+class ClientSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Client
+        fields = '__all__'
+
+
+class ShippingAddressSerializer(serializers.ModelSerializer):
+    client = ClientSerializer()
+    class Meta:
+        model = ShippingAddress
+        fields = ['location', 'building', 'house_number', 'description', 'client']
+
+
+
+class CreateOrderItemSerializer(serializers.Serializer):
+    part_id = serializers.IntegerField()
+    quantity = serializers.IntegerField()
+
+class OrderItemSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = OrderItem
+        fields = ['part', 'quantity']
+
+class OrderSerializer(serializers.Serializer):
+    order_items = CreateOrderItemSerializer(many=True)
+    client = ClientSerializer()
+    shipping_address = ShippingAddressSerializer()
+
+
+class OrderDetailSerializer(serializers.ModelSerializer):
+    shipping_address = ShippingAddressSerializer()
+    # order_items = OrderItemSerializer(many=True, read_only=True)
+    class Meta:
+        model = Order
+        fields = ['id', 'shipping_address', 'is_complete', 'date_created']
+
+class MpesaPaymentSerializer(serializers.Serializer):
+    phone_number = serializers.CharField()
+    order_id = serializers.IntegerField()

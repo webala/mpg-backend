@@ -28,6 +28,15 @@ DEBUG = True
 ALLOWED_HOSTS = ["*"]
 
 
+# Daraja API configurations
+BUSINESS_SHORT_CODE = 174379
+LIPANAMPESA_PASSKEY = "bfb279f9aa9bdbcf158e97dd71a467cd2e0c893059b10f78e6b72ada1ed2c919"
+API_RESOURCE_URL = "https://sandbox.safaricom.co.ke/mpesa/stkpush/v1/processrequest"
+DARAJA_AUTH_URL = (
+    "https://sandbox.safaricom.co.ke/oauth/v1/generate?grant_type=client_credentials"
+)
+
+
 # Application definition
 
 INSTALLED_APPS = [
@@ -128,6 +137,8 @@ STATIC_URL = 'static/'
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 CORS_ORIGIN_ALLOW_ALL = False
+
+CORS_ALLOW_CREDENTIALS = True
 
 CORS_ORIGIN_WHITELIST  = [
     "http://localhost:5173"
