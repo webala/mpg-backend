@@ -1,12 +1,14 @@
 from django.shortcuts import render
+from django.http import HttpResponse
 from rest_framework import generics
 from .models import Car, Part, Client, ShippingAddress, Order, OrderItem, MpesaTransaction
-from .serializers import CarSerializer, PartsSerializer, OrderSerializer, OrderDetailSerializer, MpesaPaymentSerializer
+from .serializers import CarSerializer, PartsSerializer, OrderSerializer, OrderDetailSerializer, MpesaPaymentSerializer, MpesaTransactionSerializer
 from .utils import initiate_stk_push
 from rest_framework.parsers import MultiPartParser, FormParser
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework.views import APIView
+import json
 
 class Cars(generics.ListCreateAPIView):
     queryset = Car.objects.all()
@@ -104,3 +106,37 @@ class ProcessMpesaPayment(APIView):
                 )
 
                 return Response({'message': 'success', 'transaction_id': transaction.id}, status=201)
+
+class MpesaCallback(APIView):
+    def post(self, request):
+        request_data = json.loads(request.body)
+        body = request_data.get("Body")
+        result_code = body.get("stkCallback").get("ResultCode")
+
+        if result_code == 0:
+            print("Payment successful")
+            request_id = body.get("stkCallback").get("CheckoutRequestID")
+            metadata = body.get("stkCallback").get("CallbackMetadata").get("Item")
+
+            for data in metadata:
+                if data.get("Name") == "MpesaReceiptNumber":
+                    receipt_number = data.get("Value")
+                elif data.get("Name") == "Amount":
+                    amount = data.get("Value")
+                elif data.get("Name") == "PhoneNumber":
+                    phone_number = data.get("Value")
+            print("receipt:", receipt_number)
+            print("amouont: ", amount)
+            print("request_id: ", request_id)
+            transaction = MpesaTransaction.objects.get(request_id=request_id)
+            transaction.receipt_number = receipt_number
+            transaction.amount = amount
+            transaction.phone_number = str(phone_number)
+            transaction.is_complete = True
+            transaction.save()
+            return HttpResponse("Ok")
+
+class MpesaTransactionDetail(generics.RetrieveAPIView):
+    model = MpesaTransaction
+    serializer_class = MpesaTransactionSerializer
+    queryset = MpesaTransaction.objects.all()

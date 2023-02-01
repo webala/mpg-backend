@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Car, Part, Client, ShippingAddress,OrderItem, Order
+from .models import Car, Part, Client, ShippingAddress,OrderItem, Order, MpesaTransaction
 from .utils import upload_image
 
 class CarSerializer (serializers.ModelSerializer):
@@ -78,3 +78,8 @@ class OrderDetailSerializer(serializers.ModelSerializer):
 class MpesaPaymentSerializer(serializers.Serializer):
     phone_number = serializers.CharField()
     order_id = serializers.IntegerField()
+
+class MpesaTransactionSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = MpesaTransaction
+        fields = '__all__'

@@ -90,7 +90,7 @@ def initiate_stk_push(phone, amount=1):
         "PartyA": phone,
         "PartyB": "174379",
         "PhoneNumber": phone,
-        "CallBackURL": "https://962a-102-219-208-82.in.ngrok.io/stk_callback",
+        "CallBackURL": "https://b564-41-80-113-61.eu.ngrok.io/api/transaction/mpesa/callback/",
         "AccountReference": "MPG AUTO STORE",
         "TransactionDesc": "Make Payment",
     }
