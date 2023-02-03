@@ -111,3 +111,97 @@ def initiate_stk_push(phone, amount=1):
             "customer_message": string_object["CustomerMessage"],
         }
     return data
+
+
+#Authentiacate pesapal
+
+def get_pesapal_access_token():
+    consumer_key = os.getenv("PESAPAL_CONSUMER_KEY")
+    consumer_secret = os.getenv("PESAPAL_CONSUMER_SECRET")
+
+    data = {
+        "consumer_key": consumer_key,
+        "consumer_secret": consumer_secret
+    }
+
+    headers = {
+        "Content-Type": "application/json",
+        "Accept": "application/json"
+    }
+
+    response = requests.post(
+        settings.PESAPAL_AUTH_URL, json=data, headers=headers
+    )
+
+    json_res = response.json()
+    access_token = json_res["token"]
+    return access_token
+
+def register_ipn_url(callback_url):
+    token = get_pesapal_access_token()
+
+    headers = {
+        "Authorization": "Bearer {}".format(token),
+        "Content-Type": "application/json",
+        "Accept": "application/json"
+    }
+
+    data = {
+        "url": callback_url,
+        "ipn_notification_type": "POST"
+    }
+
+    response = requests.post(
+        settings.PESAPAL_AUTH_URL, headers=headers
+    )
+
+    response = json.loads(response)
+    return response
+
+def get_registered_ipns():
+    token = get_pesapal_access_token()
+    headers = {
+        "Authorization": "Bearer {}".format(token),
+    }
+
+    response = requests.post(
+        settings.REGISTERED_IPNS_URL, headers=headers
+    )
+
+    ipns = json.loads(response)
+
+    if not ipns:
+        ipn = register_ipn_url("https://www.myapplication.com/response-page")
+    else:
+        ipn = ipns[0]
+    
+    return ipn
+
+def initiate_pesapal_transaction():
+    token = get_pesapal_access_token()
+    ipn_data = register_ipn_url()
+    notification_id = ipn_data["ipn_id"]
+
+    headers = {
+        "Authorization": "Bearer {}".format(token),
+        "Content-Type": "application/json",
+        "Accept": "application/json"
+    }
+
+    data = {
+        "id": "AA1122-3344ZZ",
+	    "currency": "KES",
+        "amount": 100.00,
+        "description": "Payment description goes here",
+        "callback_url": "https://www.myapplication.com/response-page",
+        "notification_id": notification_id,
+        "billing_address": {
+            "email_address": "john.doe@example.com",
+            "phone_number": "0723xxxxxx",
+	        "country_code": "KE",
+	    }
+    }
+
+    response = requests.post(
+        settings.PESAPAL_ORDER_REQUEST_URL, headers=headers
+    )

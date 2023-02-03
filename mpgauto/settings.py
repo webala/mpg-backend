@@ -37,6 +37,13 @@ DARAJA_AUTH_URL = (
 )
 
 
+#Pesapal API configurations
+PESAPAL_AUTH_URL = "https://cybqa.pesapal.com/pesapalv3/api/Auth/RequestToken"
+PESAPAL_IPN_REGISTRATION_URL = "https://cybqa.pesapal.com/pesapalv3/api/URLSetup/RegisterIPN"
+PESAPAL_ORDER_REQUEST_URL = "https://cybqa.pesapal.com/pesapalv3/api/Transactions/SubmitOrderRequest"
+REGISTERED_IPNS_URL = "https://cybqa.pesapal.com/pesapalv3/api/URLSetup/GetIpnList"
+
+
 # Application definition
 
 INSTALLED_APPS = [
