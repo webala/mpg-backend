@@ -152,7 +152,7 @@ def register_ipn_url(callback_url):
     }
 
     response = requests.post(
-        settings.PESAPAL_AUTH_URL, headers=headers
+        settings.PESAPAL_AUTH_URL, headers=headers, json=data
     )
 
     response = json.loads(response)
@@ -179,7 +179,7 @@ def get_registered_ipns():
 
 def initiate_pesapal_transaction():
     token = get_pesapal_access_token()
-    ipn_data = register_ipn_url()
+    ipn_data = get_registered_ipns()
     notification_id = ipn_data["ipn_id"]
 
     headers = {
