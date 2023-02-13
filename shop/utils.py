@@ -113,8 +113,9 @@ def initiate_stk_push(phone, amount=1):
     return data
 
 
-#Authentiacate pesapal
 
+
+#Authentiacate pesapal
 def get_pesapal_access_token():
     consumer_key = os.getenv("PESAPAL_CONSUMER_KEY")
     consumer_secret = os.getenv("PESAPAL_CONSUMER_SECRET")
@@ -134,11 +135,11 @@ def get_pesapal_access_token():
     )
 
     json_res = response.json()
-    access_token = json_res["token"]
-    return access_token
+    token = json_res['token']
+    return token
 
-def register_ipn_url(callback_url):
-    token = get_pesapal_access_token()
+
+def register_ipn_url(callback_url, token):
 
     headers = {
         "Authorization": "Bearer {}".format(token),
@@ -152,26 +153,26 @@ def register_ipn_url(callback_url):
     }
 
     response = requests.post(
-        settings.PESAPAL_AUTH_URL, headers=headers, json=data
+        settings.PESAPAL_IPN_REGISTRATION_URL, headers=headers, json=data
     )
 
-    response = json.loads(response)
+    response = response.json()
     return response
 
-def get_registered_ipns():
-    token = get_pesapal_access_token()
+def get_registered_ipns(token):
+   
     headers = {
         "Authorization": "Bearer {}".format(token),
     }
 
-    response = requests.post(
+    response = requests.get(
         settings.REGISTERED_IPNS_URL, headers=headers
     )
 
-    ipns = json.loads(response)
+    ipns = response.json()
 
     if not ipns:
-        ipn = register_ipn_url("https://www.myapplication.com/response-page")
+        ipn = register_ipn_url("https://7be2-41-80-113-56.eu.ngrok.io/api/transaction/pesapal/ipn/", token)
     else:
         ipn = ipns[0]
     
@@ -179,7 +180,8 @@ def get_registered_ipns():
 
 def initiate_pesapal_transaction():
     token = get_pesapal_access_token()
-    ipn_data = get_registered_ipns()
+    ipn_data = get_registered_ipns(token)
+    print('ipn data: ', ipn_data)
     notification_id = ipn_data["ipn_id"]
 
     headers = {
@@ -188,12 +190,14 @@ def initiate_pesapal_transaction():
         "Accept": "application/json"
     }
 
+    unique_id = secrets.token_hex(8)
+    
     data = {
-        "id": "AA1122-3344ZZ",
+        "id": unique_id,
 	    "currency": "KES",
         "amount": 100.00,
         "description": "Payment description goes here",
-        "callback_url": "https://www.myapplication.com/response-page",
+        "callback_url": "https://7be2-41-80-113-56.eu.ngrok.io/api/transaction/pesapal/callback/",
         "notification_id": notification_id,
         "billing_address": {
             "email_address": "john.doe@example.com",
@@ -203,5 +207,10 @@ def initiate_pesapal_transaction():
     }
 
     response = requests.post(
-        settings.PESAPAL_ORDER_REQUEST_URL, headers=headers
+        settings.PESAPAL_ORDER_REQUEST_URL, headers=headers, json=data
     )
+
+    print('order request res: ', response)
+
+    json_res = response.json()
+    return json_res

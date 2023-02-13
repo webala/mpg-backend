@@ -30,6 +30,8 @@ class Part(models.Model):
     image_filename = models.CharField(max_length=20, null=True, blank=True)
     inventory = models.IntegerField()
     price = models.DecimalField(max_digits=7, decimal_places=2)
+    description = models.CharField(max_length=300)
+    brand = models.CharField(max_length=20)
 
     def __str__(self):
         return self.name
@@ -89,3 +91,9 @@ class MpesaTransaction(models.Model):
     phone_number = models.CharField(max_length=15, null=True)
     amount = models.DecimalField(max_digits=7, decimal_places=2, null=True)
     receipt_number = models.CharField(max_length=15, null=True)
+
+
+class PesapalTransaction(models.Model):
+    order_tracking_id = models.CharField(max_length=50)
+    order = models.ForeignKey(Order, on_delete=models.SET_NULL, null=True)
+    date = models.DateTimeField(auto_now_add=True)

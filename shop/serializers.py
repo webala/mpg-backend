@@ -19,11 +19,18 @@ class PartsSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Part
-        fields = ['id', 'name', 'part_no', 'cars', 'category', 'image_url', 'image_filename', 'inventory']
+        fields = ['id', 'name', 'part_no', 'cars', 'category', 'image_url', 'image_filename', 'inventory', 'price', 'description', 'brand']
 
 
     def create(self, validated_data):
-        part = Part.objects.create(part_no=validated_data.get('part_no'), category=validated_data.get('category'), inventory=validated_data.get('inventory'))
+        part = Part.objects.create(
+            part_no=validated_data.get('part_no'), 
+            category=validated_data.get('category'), 
+            inventory=validated_data.get('inventory'),
+            price=validated_data.get('price'),
+            description=validated_data.get('description'),
+            brand=validated_data.get('brand')
+        )
         cars = validated_data.get('cars')
      
         for value in cars:
@@ -64,7 +71,6 @@ class OrderItemSerializer(serializers.ModelSerializer):
 
 class OrderSerializer(serializers.Serializer):
     order_items = CreateOrderItemSerializer(many=True)
-    client = ClientSerializer()
     shipping_address = ShippingAddressSerializer()
 
 
@@ -77,6 +83,9 @@ class OrderDetailSerializer(serializers.ModelSerializer):
 
 class MpesaPaymentSerializer(serializers.Serializer):
     phone_number = serializers.CharField()
+    order_id = serializers.IntegerField()
+
+class PesapalPaymentSerializer(serializers.Serializer):
     order_id = serializers.IntegerField()
 
 class MpesaTransactionSerializer(serializers.ModelSerializer):

@@ -1,9 +1,9 @@
 from django.shortcuts import render
 from django.http import HttpResponse
 from rest_framework import generics
-from .models import Car, Part, Client, ShippingAddress, Order, OrderItem, MpesaTransaction
-from .serializers import CarSerializer, PartsSerializer, OrderSerializer, OrderDetailSerializer, MpesaPaymentSerializer, MpesaTransactionSerializer
-from .utils import initiate_stk_push
+from .models import Car, Part, Client, ShippingAddress, Order, OrderItem, MpesaTransaction, PesapalTransaction
+from .serializers import CarSerializer, PartsSerializer, OrderSerializer, OrderDetailSerializer, MpesaPaymentSerializer, MpesaTransactionSerializer, PesapalPaymentSerializer
+from .utils import initiate_stk_push, initiate_pesapal_transaction
 from rest_framework.parsers import MultiPartParser, FormParser
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
@@ -46,8 +46,9 @@ class OrdersView(APIView):
         serializer = OrderSerializer(data=request.data)
         if serializer.is_valid(raise_exception=True):
             data = serializer.validated_data
-            client_data = data.get('client')
+            
             shipping_address_data = data.get('shipping_address')
+            client_data = shipping_address_data.get('client')
             order_items_data = data.get('order_items')
 
             client = Client.objects.create(
@@ -140,3 +141,29 @@ class MpesaTransactionDetail(generics.RetrieveAPIView):
     model = MpesaTransaction
     serializer_class = MpesaTransactionSerializer
     queryset = MpesaTransaction.objects.all()
+
+
+class ProcessPesapalPayment(APIView):
+    def post(self, request):
+        serializer = PesapalPaymentSerializer(data=request.data)
+        if serializer.is_valid(raise_exception=True):
+            response = initiate_pesapal_transaction()
+            order_id = serializer.validated_data.get('order_id')
+            order = Order.objects.get(id=order_id)
+            order_tracking_id = response.get('order_tracking_id')
+            transaction = PesapalTransaction.objects.create(
+                order=order,
+                order_tracking_id=order_tracking_id
+            )
+            print('pesapal response: ', response)
+            return Response(response, status=200)
+
+def pesapal_ipn(request):
+    data = json.loads(request.body)
+    print('ipn url called', data)
+
+
+def pesapal_callback(request):
+    data = json.loads(request.body)
+    print('callback called: ', data)
+
