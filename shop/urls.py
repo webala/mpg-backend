@@ -14,5 +14,6 @@ urlpatterns = [
     path('payment/pesapal', ProcessPesapalPayment.as_view(), name='pesapal-payment'),
     path('transaction/pesapal/ipn', pesapal_ipn, name='pesapal-ipn'),
     path('transaction/pesapal/callback', pesapal_callback, name='pesapal-callback'),
-    path('user/vehicles/add', add_user_vehicle, name='pesapal-callback'),
+    path('user/vehicles/add', add_user_vehicle, name='add-user-vehicle'),
+    path('user/vehicles/<str:username>', user_vehicles_list, name='user-vehicles-list')
 ]

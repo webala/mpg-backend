@@ -2,7 +2,7 @@ from django.http import HttpResponse
 from django.contrib.auth.models import User
 from rest_framework import generics
 from .models import Car, Part, Client, ShippingAddress, Order, OrderItem, MpesaTransaction, PesapalTransaction, UserVehicle
-from .serializers import CarSerializer, PartsSerializer, OrderSerializer, OrderDetailSerializer, MpesaPaymentSerializer, MpesaTransactionSerializer, PesapalPaymentSerializer, UserVehicleSerializer
+from .serializers import CarSerializer, PartsSerializer, OrderSerializer, OrderDetailSerializer, MpesaPaymentSerializer, MpesaTransactionSerializer, PesapalPaymentSerializer, UserVehicleCreateSerializer, UserVehicleSerializer
 from .utils import initiate_stk_push, initiate_pesapal_transaction
 from rest_framework.parsers import MultiPartParser, FormParser
 from rest_framework.decorators import api_view
@@ -169,7 +169,7 @@ def pesapal_callback(request):
 
 @api_view(['POST'])
 def add_user_vehicle(request):
-    serializer = UserVehicleSerializer(data = request.data)
+    serializer = UserVehicleCreateSerializer(data = request.data)
     if serializer.is_valid(raise_exception=True):
         data = serializer.validated_data
         username = data.get('username')
@@ -177,6 +177,8 @@ def add_user_vehicle(request):
 
         user = User.objects.get(username=username)
         car = Car.objects.get(id=car_id)
+
+        print('car: ', car)
 
         user_vehicles_queryset = UserVehicle.objects.filter(user=user)
         if user_vehicles_queryset.exists():
@@ -189,3 +191,15 @@ def add_user_vehicle(request):
             user_vehicles.save()
         
         return Response({'message': 'Vehicle added for user {}'.format(user.username)}, status=200)
+
+
+@api_view(['GET'])
+def user_vehicles_list(requset, username):
+    user = User.objects.get(username=username)
+    user_vehicles_queryset = UserVehicle.objects.filter(user=user)
+    if user_vehicles_queryset.exists():
+        vehicles = user_vehicles_queryset.first().cars
+        serializer = CarSerializer(vehicles, many=True)
+        return Response(serializer.data, status=200)
+    else:
+        return Response({'message': 'No vehicles for this user'}, status=404)
