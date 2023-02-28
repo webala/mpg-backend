@@ -92,3 +92,8 @@ class MpesaTransactionSerializer(serializers.ModelSerializer):
     class Meta:
         model = MpesaTransaction
         fields = '__all__'
+
+
+class UserVehicleSerializer(serializers.Serializer):
+    username = serializers.CharField()
+    car_id = serializers.IntegerField()

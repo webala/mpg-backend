@@ -1,5 +1,5 @@
 from django.db import models
-
+from django.contrib.auth.models import User
 # Create your models here.
 
 
@@ -97,3 +97,8 @@ class PesapalTransaction(models.Model):
     order_tracking_id = models.CharField(max_length=50)
     order = models.ForeignKey(Order, on_delete=models.SET_NULL, null=True)
     date = models.DateTimeField(auto_now_add=True)
+
+
+class UserVehicle(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE)
+    cars = models.ManyToManyField(Car, blank=True)

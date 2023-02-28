@@ -1,8 +1,8 @@
-from django.shortcuts import render
 from django.http import HttpResponse
+from django.contrib.auth.models import User
 from rest_framework import generics
-from .models import Car, Part, Client, ShippingAddress, Order, OrderItem, MpesaTransaction, PesapalTransaction
-from .serializers import CarSerializer, PartsSerializer, OrderSerializer, OrderDetailSerializer, MpesaPaymentSerializer, MpesaTransactionSerializer, PesapalPaymentSerializer
+from .models import Car, Part, Client, ShippingAddress, Order, OrderItem, MpesaTransaction, PesapalTransaction, UserVehicle
+from .serializers import CarSerializer, PartsSerializer, OrderSerializer, OrderDetailSerializer, MpesaPaymentSerializer, MpesaTransactionSerializer, PesapalPaymentSerializer, UserVehicleSerializer
 from .utils import initiate_stk_push, initiate_pesapal_transaction
 from rest_framework.parsers import MultiPartParser, FormParser
 from rest_framework.decorators import api_view
@@ -167,3 +167,25 @@ def pesapal_callback(request):
     data = json.loads(request.body)
     print('callback called: ', data)
 
+@api_view(['POST'])
+def add_user_vehicle(request):
+    serializer = UserVehicleSerializer(data = request.data)
+    if serializer.is_valid(raise_exception=True):
+        data = serializer.validated_data
+        username = data.get('username')
+        car_id = data.get('car_id')
+
+        user = User.objects.get(username=username)
+        car = Car.objects.get(id=car_id)
+
+        user_vehicles_queryset = UserVehicle.objects.filter(user=user)
+        if user_vehicles_queryset.exists():
+            user_vehicles = user_vehicles_queryset.first()
+            user_vehicles.cars.add(car)
+            user_vehicles.save()      
+        else:
+            user_vehicles = UserVehicle.objects.create(user=user)
+            user_vehicles.cars.add(car)
+            user_vehicles.save()
+        
+        return Response({'message': 'Vehicle added for user {}'.format(user.username)}, status=200)
