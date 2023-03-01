@@ -3,6 +3,7 @@ from rest_framework.validators import UniqueValidator
 from django.contrib.auth.models import User
 from django.contrib.auth.password_validation import validate_password
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
+from django.contrib.auth.models import Group
 #Used to access and refresh tokens
 
 
@@ -13,8 +14,11 @@ class MyTokenObtainPairSerializer(TokenObtainPairSerializer):
         token = super().get_token(user)
 
         #Add custom claims
+        
         token['username'] = user.username
         token['email'] = user.email
+        token['groups'] = [group.name for group in list(user.groups.all())]
+        token['id'] = user.id
 
         return token
 
@@ -56,7 +60,9 @@ class NewUserSerializer(serializers.ModelSerializer):
          first_name = validated_data['first_name'],
          last_name = validated_data['last_name'],
       )
-      print('User created')
+      
+      customer_group = Group.objects.get(name='customer')
+      user.groups.add(customer_group)
       user.set_password(validated_data['password1'])
       user.save()
       return user
