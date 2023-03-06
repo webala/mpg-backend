@@ -2,10 +2,10 @@ from django.http import HttpResponse
 from django.contrib.auth.models import User
 from rest_framework import generics
 from .models import Car, Part, Client, ShippingAddress, Order, OrderItem, MpesaTransaction, PesapalTransaction, UserVehicle
-from .serializers import CarSerializer, PartsSerializer, OrderSerializer, OrderDetailSerializer, MpesaPaymentSerializer, MpesaTransactionSerializer, PesapalPaymentSerializer, UserVehicleCreateSerializer, UserVehicleSerializer
-from .utils import initiate_stk_push, initiate_pesapal_transaction
+from .serializers import CarSerializer, PartsSerializer, OrderSerializer, OrderDetailSerializer, MpesaPaymentSerializer, MpesaTransactionSerializer, PesapalPaymentSerializer, UserVehicleCreateSerializer, UserVehicleSerializer, UploadImageSerializer
+from .utils import initiate_stk_push, initiate_pesapal_transaction, upload_image
 from rest_framework.parsers import MultiPartParser, FormParser
-from rest_framework.decorators import api_view
+from rest_framework.decorators import api_view, parser_classes
 from rest_framework.response import Response
 from rest_framework.views import APIView
 import json
@@ -18,6 +18,22 @@ class Cars(generics.ListCreateAPIView):
 class Parts(generics.ListCreateAPIView):
     queryset = Part.objects.all()
     serializer_class = PartsSerializer
+
+@api_view(['POST'])
+@parser_classes([FormParser, MultiPartParser])
+def upload_part_image(request):
+    serializer = UploadImageSerializer(data=request.data)
+    if serializer.is_valid(raise_exception=True):
+        data = serializer.validated_data
+        print('data: ', data)
+        part_id = data.get('part_id')
+        part = Part.objects.get(id=part_id)
+        image_file = data.get('image')
+        image_data = upload_image(image_file)
+        part.image_filename = image_data['filename']
+        part.image_url = image_data['image_url']
+        part.save()
+        return Response({'message': 'image uploaded succesfully'}, status=200)
 
 
 class PartDetail(generics.RetrieveAPIView):

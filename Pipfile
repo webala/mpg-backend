@@ -11,6 +11,7 @@ python-dotenv = "*"
 pyrebase4 = "*"
 djangorestframework-simplejwt = "*"
 black = "*"
+pillow = "*"
 
 [dev-packages]
 

@@ -32,7 +32,7 @@ def upload_image(file):
     filename = random_hex + f_ext
     directory = f'parts/{filename}'
     user = auth.sign_in_with_email_and_password(email, password)
-    storage.chile(directory).put(file, user['idToken'])
+    storage.child(directory).put(file, user['idToken'])
     image_url = get_image_url(filename, user)
     return {'filename': filename, 'image_url': image_url}
 

@@ -101,3 +101,7 @@ class UserVehicleSerializer(serializers.ModelSerializer):
 class UserVehicleCreateSerializer(serializers.Serializer):
     username = serializers.CharField()
     car_id = serializers.IntegerField()
+
+class UploadImageSerializer(serializers.Serializer):
+    image = serializers.ImageField()
+    part_id = serializers.IntegerField()

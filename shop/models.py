@@ -29,7 +29,7 @@ class Part(models.Model):
     part_no = models.CharField(max_length=20)
     cars = models.ManyToManyField(Car, blank=True)
     category = models.CharField(max_length=20, choices=categories, default='OTHER')
-    image_url = models.CharField(max_length=200, null=True, blank=True)
+    image_url = models.CharField(max_length=2000, null=True, blank=True)
     image_filename = models.CharField(max_length=20, null=True, blank=True)
     inventory = models.IntegerField()
     price = models.DecimalField(max_digits=7, decimal_places=2)
