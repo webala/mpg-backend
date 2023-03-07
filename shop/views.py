@@ -2,7 +2,7 @@ from django.http import HttpResponse
 from django.contrib.auth.models import User
 from rest_framework import generics
 from .models import Car, Part, Client, ShippingAddress, Order, OrderItem, MpesaTransaction, PesapalTransaction, UserVehicle
-from .serializers import CarSerializer, PartsSerializer, OrderSerializer, OrderDetailSerializer, MpesaPaymentSerializer, MpesaTransactionSerializer, PesapalPaymentSerializer, UserVehicleCreateSerializer, UserVehicleSerializer, UploadImageSerializer
+from .serializers import CarSerializer, PartsSerializer, OrderSerializer, OrderDetailSerializer, MpesaPaymentSerializer, MpesaTransactionSerializer, PesapalPaymentSerializer, UserVehicleCreateSerializer, UserVehicleSerializer, UploadImageSerializer, PesapalTransactionSerializer, ClientSerializer
 from .utils import initiate_stk_push, initiate_pesapal_transaction, upload_image
 from rest_framework.parsers import MultiPartParser, FormParser
 from rest_framework.decorators import api_view, parser_classes
@@ -97,7 +97,17 @@ class OrdersView(APIView):
 
 class OrderListView(generics.ListAPIView):
     queryset = Order.objects.all()
-    serializer_class = ''
+    serializer_class = OrderDetailSerializer
+
+    def get_serializer_context(self, **kwargs):
+        context = super(OrderListView, self).get_serializer_context(**kwargs)
+        print('context: ', context)
+        # order = super().get_object()
+        # print('order: ', order)
+        # order_items = order.orderitem_set.all()
+        # print('order items: ', order_items)
+        # context.update({'order_items': order_items})
+        return context
 
 @api_view(['GET'])
 def parts_by_category(request, category):
@@ -223,3 +233,16 @@ def user_vehicles_list(requset, username):
         return Response(serializer.data, status=200)
     else:
         return Response({'message': 'No vehicles for this user'}, status=404)
+    
+
+class MpesaTransactionsList(generics.ListAPIView):
+    queryset = MpesaTransaction.objects.all()
+    serializer_class = MpesaTransactionSerializer
+
+class PesapalTransactionsList(generics.ListAPIView):
+    queryset = PesapalTransaction.objects.all()
+    serializer_class = PesapalTransactionSerializer
+
+class ClientList(generics.ListAPIView):
+    queryset = Client.objects.all()
+    serializer_class = ClientSerializer

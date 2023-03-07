@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Car, Part, Client, ShippingAddress,OrderItem, Order, MpesaTransaction, UserVehicle
+from .models import Car, Part, Client, ShippingAddress,OrderItem, Order, MpesaTransaction, UserVehicle, PesapalTransaction
 from .utils import upload_image
 
 class CarSerializer (serializers.ModelSerializer):
@@ -76,7 +76,7 @@ class OrderSerializer(serializers.Serializer):
 
 class OrderDetailSerializer(serializers.ModelSerializer):
     shipping_address = ShippingAddressSerializer()
-    order_items = OrderItemSerializer(many=True, read_only=True)
+    order_items = OrderItemSerializer(required=False, many=True, read_only=True)
     class Meta:
         model = Order
         fields = ['id', 'shipping_address', 'is_complete', 'date_created', "order_items"]
@@ -92,6 +92,11 @@ class MpesaTransactionSerializer(serializers.ModelSerializer):
     class Meta:
         model = MpesaTransaction
         fields = '__all__'
+
+class PesapalTransactionSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = PesapalTransaction
+        fields = "__all__"
 
 class UserVehicleSerializer(serializers.ModelSerializer):
     class Meta:
