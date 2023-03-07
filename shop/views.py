@@ -95,6 +95,10 @@ class OrdersView(APIView):
 
             return Response({"message": "success", "order_id": order.id}, status=201)
 
+class OrderListView(generics.ListAPIView):
+    queryset = Order.objects.all()
+    serializer_class = ''
+
 @api_view(['GET'])
 def parts_by_category(request, category):
     queryset = Part.objects.filter(category=category)

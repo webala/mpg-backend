@@ -76,10 +76,10 @@ class OrderSerializer(serializers.Serializer):
 
 class OrderDetailSerializer(serializers.ModelSerializer):
     shipping_address = ShippingAddressSerializer()
-    # order_items = OrderItemSerializer(many=True, read_only=True)
+    order_items = OrderItemSerializer(many=True, read_only=True)
     class Meta:
         model = Order
-        fields = ['id', 'shipping_address', 'is_complete', 'date_created']
+        fields = ['id', 'shipping_address', 'is_complete', 'date_created', "order_items"]
 
 class MpesaPaymentSerializer(serializers.Serializer):
     phone_number = serializers.CharField()
