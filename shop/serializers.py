@@ -59,12 +59,13 @@ class ShippingAddressSerializer(serializers.ModelSerializer):
         fields = ['location', 'building', 'house_number', 'description', 'client']
 
 
-
 class CreateOrderItemSerializer(serializers.Serializer):
     part_id = serializers.IntegerField()
     quantity = serializers.IntegerField()
 
 class OrderItemSerializer(serializers.ModelSerializer):
+    part = PartsSerializer()
+
     class Meta:
         model = OrderItem
         fields = ['part', 'quantity']

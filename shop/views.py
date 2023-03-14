@@ -2,7 +2,7 @@ from django.http import HttpResponse
 from django.contrib.auth.models import User
 from rest_framework import generics
 from .models import Car, Part, Client, ShippingAddress, Order, OrderItem, MpesaTransaction, PesapalTransaction, UserVehicle
-from .serializers import CarSerializer, PartsSerializer, OrderSerializer, OrderDetailSerializer, MpesaPaymentSerializer, MpesaTransactionSerializer, PesapalPaymentSerializer, UserVehicleCreateSerializer, UserVehicleSerializer, UploadImageSerializer, PesapalTransactionSerializer, ClientSerializer
+from .serializers import CarSerializer, PartsSerializer, OrderSerializer, OrderDetailSerializer, MpesaPaymentSerializer, MpesaTransactionSerializer, PesapalPaymentSerializer, UserVehicleCreateSerializer, UserVehicleSerializer, UploadImageSerializer, PesapalTransactionSerializer, ClientSerializer, OrderItemSerializer
 from .utils import initiate_stk_push, initiate_pesapal_transaction, upload_image
 from rest_framework.parsers import MultiPartParser, FormParser
 from rest_framework.decorators import api_view, parser_classes
@@ -110,10 +110,22 @@ class OrderListView(generics.ListAPIView):
         return context
 
 @api_view(['GET'])
-def parts_by_category(request, category):
-    queryset = Part.objects.filter(category=category)
-    serializer = PartsSerializer(queryset, many=True)
-    return Response(serializer.data, status=200)
+def parts_by_category(request, category, vehicle_id=None):
+    if vehicle_id:
+        car = Car.objects.get(id=vehicle_id)
+        queryset = Part.objects.filter(
+            category=category
+        )
+        parts = []
+        for part in queryset:
+            if car in part.cars:
+                parts.append(part)
+        serializer = PartsSerializer(parts)
+        return Response(serializer.data, status=200)
+    else:
+        queryset = Part.objects.filter(category=category)
+        serializer = PartsSerializer(queryset, many=True)
+        return Response(serializer.data, status=200)
 
 
 class ProcessMpesaPayment(APIView):
@@ -232,7 +244,9 @@ def user_vehicles_list(requset, username):
         serializer = CarSerializer(vehicles, many=True)
         return Response(serializer.data, status=200)
     else:
-        return Response({'message': 'No vehicles for this user'}, status=404)
+        vehicles = []
+        serializer = CarSerializer(vehicles, many=True)
+        return Response(serializer.data, status=200)
     
 
 class MpesaTransactionsList(generics.ListAPIView):
@@ -246,3 +260,10 @@ class PesapalTransactionsList(generics.ListAPIView):
 class ClientList(generics.ListAPIView):
     queryset = Client.objects.all()
     serializer_class = ClientSerializer
+
+@api_view(['GET'])
+def get_order_items(request, order_id):
+    order = Order.objects.get(id=order_id)
+    order_items = order.orderitem_set.all()
+    serializer = OrderItemSerializer(order_items, many=True)
+    return Response(serializer.data, status=200)
